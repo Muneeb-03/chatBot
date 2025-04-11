@@ -15,7 +15,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import Fab from "@mui/material/Fab";
-import { sendMessage, formatResponseForDisplay } from "../services/mockapi";
+import { sendMessage, formatResponseForDisplay } from "../services/api";
 const ReactMarkdown = React.lazy(() => import("react-markdown"));
 
 function Message({ message }) {
