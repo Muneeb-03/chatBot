@@ -19,6 +19,92 @@ import { sendMessage, formatResponseForDisplay } from "../services/api";
 const ReactMarkdown = React.lazy(() => import("react-markdown"));
 
 function Message({ message }) {
+  const [expandedSections, setExpandedSections] = React.useState({
+    csv: false,
+    json: false,
+    kafka: false,
+  });
+
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  const hasDataSections =
+    message.raw &&
+    ((message.raw.csv_file && message.raw.csv_file.length > 0) ||
+      (message.raw.json_file && message.raw.json_file.length > 0) ||
+      (message.raw.kafka_file && message.raw.kafka_file.length > 0));
+
+  const renderDataSection = (title, data, section) => {
+    const isExpanded = expandedSections[section];
+
+    return (
+      <Box sx={{ mt: 1, mb: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            border: "1px solid #e0e0e0",
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              padding: "8px 16px",
+              backgroundColor: "#f5f5f5",
+              cursor: "pointer",
+              "&:hover": {
+                backgroundColor: "#eeeeee",
+              },
+            }}
+            onClick={() => toggleSection(section)}
+          >
+            <IconButton
+              size="small"
+              sx={{
+                mr: 1,
+                transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
+              }}
+            >
+              {isExpanded ? <ExpandMoreIcon /> : <KeyboardArrowRightIcon />}
+            </IconButton>
+            <Typography variant="subtitle2" fontWeight="medium">
+              {title}
+            </Typography>
+          </Box>
+
+          {isExpanded && (
+            <Box
+              sx={{
+                padding: "16px",
+                maxHeight: "400px",
+                overflowY: "auto",
+                backgroundColor: "#fafafa",
+              }}
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  whiteSpace: "pre-wrap",
+                  fontSize: "0.875rem",
+                  fontFamily: "monospace",
+                }}
+              >
+                {JSON.stringify(data, null, 2)}
+              </pre>
+            </Box>
+          )}
+        </Paper>
+      </Box>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -41,11 +127,40 @@ function Message({ message }) {
           {message.content}
         </Typography>
       ) : (
-        <React.Suspense
-          fallback={<Typography variant="body1">{message.content}</Typography>}
-        >
-          <ReactMarkdown>{message.content}</ReactMarkdown>
-        </React.Suspense>
+        <>
+          <React.Suspense
+            fallback={
+              <Typography variant="body1">{message.content}</Typography>
+            }
+          >
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </React.Suspense>
+
+          {/* Render collapsible data sections if available */}
+          {hasDataSections && (
+            <Box sx={{ mt: 2 }}>
+              {message.raw.csv_file &&
+                message.raw.csv_file.length > 0 &&
+                renderDataSection("📁 CSV Data", message.raw.csv_file, "csv")}
+
+              {message.raw.json_file &&
+                message.raw.json_file.length > 0 &&
+                renderDataSection(
+                  "📁 JSON Data",
+                  message.raw.json_file,
+                  "json"
+                )}
+
+              {message.raw.kafka_file &&
+                message.raw.kafka_file.length > 0 &&
+                renderDataSection(
+                  "📁 Kafka Data",
+                  message.raw.kafka_file,
+                  "kafka"
+                )}
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );
@@ -69,17 +184,14 @@ function ChatArea({
     if (message.trim() && !isLoading && currentChat) {
       try {
         setIsLoading(true);
-
         const userMessage = { role: "user", content: message };
         const updatedMessages = [...currentChat.messages, userMessage];
         const updatedChat = { ...currentChat, messages: updatedMessages };
         updateCurrentChat(updatedChat);
-
         const history = updatedChat.messages.slice(0, -1).map((msg) => ({
           role: msg.role,
           content: msg.content,
         }));
-
         const response = await sendMessage(message, history, detailedMode);
 
         const formattedResponse = detailedMode
@@ -94,7 +206,6 @@ function ChatArea({
 
         const finalMessages = [...updatedMessages, assistantMessage];
         updateCurrentChat({ ...currentChat, messages: finalMessages });
-
         setMessage("");
 
         setTimeout(() => {
@@ -166,7 +277,6 @@ function ChatArea({
             <KeyboardArrowRightIcon />
           </IconButton>
         )}
-
         {sidebarOpen && (
           <IconButton
             onClick={toggleSidebar}
@@ -179,7 +289,6 @@ function ChatArea({
             <KeyboardArrowLeftIcon />
           </IconButton>
         )}
-
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Button
             endIcon={<ExpandMoreIcon />}
@@ -191,7 +300,6 @@ function ChatArea({
           >
             Quick Settings
           </Button>
-
           <FormControlLabel
             control={
               <Switch
@@ -204,10 +312,8 @@ function ChatArea({
             sx={{ ml: 2 }}
           />
         </Box>
-
         {!sidebarOpen && <Box sx={{ width: 40 }} />}
       </Box>
-
       <Box
         ref={chatContainerRef}
         sx={{
@@ -275,7 +381,6 @@ function ChatArea({
           </Box>
         )}
       </Box>
-
       <Box
         component="form"
         onSubmit={handleSubmit}
@@ -354,7 +459,6 @@ function ChatArea({
           )}
         </Paper>
       </Box>
-
       <Box
         sx={{
           position: "absolute",

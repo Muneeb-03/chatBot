@@ -1,5 +1,4 @@
 const BACKEND_URL = process.env.REACT_APP_BACKEND_LINK ;
-
 export const sendMessage = async (message, history, toggle = false) => {
   try {
     const response = await fetch(`${BACKEND_URL}/chat`, {
@@ -48,17 +47,6 @@ export const formatResponseForDisplay = (response) => {
     formattedResponse += `**📊 Data Insight**:\n${response.data}\n\n`;
   }
 
-  if (response.csv_file_path) {
-    formattedResponse += `**📁 CSV File Path**:\n${response.csv_file_path}\n\n`;
-  }
-
-  if (response.json_file_path) {
-    formattedResponse += `**📁 JSON File Path**:\n${response.json_file_path}\n\n`;
-  }
-
-  if (response.kafka_file_path) {
-    formattedResponse += `**📁 Kafka File Path**:\n${response.kafka_file_path}\n\n`;
-  }
 
   if (response.python_code) {
     formattedResponse += `**💻 Code Executed**:\n\`\`\`python\n${response.python_code}\n\`\`\`\n\n`;
